@@ -57,6 +57,7 @@ final class ExecuteAction implements Action
         $this->shellSoul = $shellSoul;
     }
 
+    /** Sends execution requests to the kernel? */
     public function call(array $header, array $content, $zmqIds = [])
     {
         $this->broker->send($this->iopubSocket, 'status', ['execution_state' => 'busy'], $header);
@@ -90,12 +91,18 @@ final class ExecuteAction implements Action
         $this->broker->send($this->iopubSocket, 'status', ['execution_state' => 'idle'], $this->header);
     }
 
-    public function notifyMessage(string $message)
+    public function notifyMessage(string $message, bool $isRaw)
     {
+        $bundle = ['text/plain' => $message];
+        if ($isRaw) {
+            // Send over raw results as html. Tags should render and plain text will still look fine.
+            $bundle['text/html'] = $message;
+        }
+
         $this->broker->send(
             $this->iopubSocket,
             'execute_result',
-            ['execution_count' => $this->execCount, 'data' => ['text/plain' => $message], 'metadata' => new \stdClass],
+            ['execution_count' => $this->execCount, 'data' => $bundle, 'metadata' => new \stdClass],
             $this->header
         );
     }

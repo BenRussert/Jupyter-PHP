@@ -55,6 +55,7 @@ final class KernelOutput implements OutputInterface
     public function write($messages, $newline = false, $options = self::OUTPUT_NORMAL)
     {
         $types = self::OUTPUT_NORMAL | self::OUTPUT_RAW | self::OUTPUT_PLAIN;
+        // if $options is 0 or falsy then use OUTPUT_NORMAL as default...
         $type = $types & $options ?: self::OUTPUT_NORMAL;
         
         if (\is_string($messages)) {
@@ -79,7 +80,8 @@ final class KernelOutput implements OutputInterface
             return; // TODO: Throw an error?
         }
 
-        $this->executeAction->notifyMessage($preparedMessage);
+        $isRaw = $type == self::OUTPUT_RAW ?: false;
+        $this->executeAction->notifyMessage($preparedMessage, $isRaw);
     }
 
     /**
